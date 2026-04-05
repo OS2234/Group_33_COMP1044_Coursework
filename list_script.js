@@ -88,17 +88,27 @@ function setTableHeight(tableId) {
 
     const headerHeight = thead.offsetHeight;
     const rows = tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
-    const rowHeight = rows.length && rows[0].offsetHeight ? rows[0].offsetHeight : 45;
-    const visibleRows = Math.min(rows.length, 5);
-    const totalHeight = headerHeight + (rowHeight * visibleRows) + 2;
 
-    container.style.maxHeight = `${totalHeight}px`;
+    const maxRowsToShow = 5;
+    let rowsHeight = 0;
+
+    for (let i = 0; i < Math.min(rows.length, maxRowsToShow); i++) {
+        rowsHeight += rows[i].offsetHeight;
+    }
+
+    const totalHeight = headerHeight + rowsHeight + 2;
+
+    container.style.height = `${totalHeight}px`;
+    container.style.overflowY = 'auto';
 }
 
 function setAllTableHeights() {
-    const tableContainers = ['studentsScrollableTable', 'accountsTableBody', 'assessorsTableBody', 'assignedStudentsTableBody']
+    const tableContainers = ['studentsScrollableTable', 'accountsScrollableTable', 'assessorsScrollableTable', 'assignedStudentsScrollableTable']
         .map(id => {
             if (id === 'studentsScrollableTable') return document.getElementById(id);
+            if (id === 'accountsScrollableTable') return document.getElementById(id);
+            if (id === 'assessorsScrollableTable') return document.getElementById(id);
+            if (id === 'accountScrollableTable') return document.getElementById(id);
             const el = document.getElementById(id);
             return el?.closest('.scrollable-table');
         })

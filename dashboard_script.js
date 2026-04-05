@@ -23,6 +23,55 @@ let studentList = [];
 let assessorList = [];
 let assessorEvaluations = {};
 
+let sessionAddedAccounts = [];
+let sessionAddedStudents = [];
+let sessionAddedAssessors = [];
+let currentSessionId = null;
+
+// ============================================
+// GENERAL FUNCTIONS
+// ============================================
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function (m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+// ============================================
+// SESSION MANAGEMENT
+// ============================================
+
+function getCurrentSessionId() {
+    let sessionId = sessionStorage.getItem('dashboardSessionId');
+    if (!sessionId) {
+        sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        sessionStorage.setItem('dashboardSessionId', sessionId);
+    }
+    return sessionId;
+}
+
+function isAddedInCurrentSession(item) {
+    if (!item.createdAtSession) return false;
+    return item.createdAtSession === currentSessionId;
+}
+
+function getSessionFilteredAccounts() {
+    return accountList.filter(acc => isAddedInCurrentSession(acc, 'account'));
+}
+
+function getSessionFilteredStudents() {
+    return studentList.filter(student => isAddedInCurrentSession(student, 'student'));
+}
+
+function getSessionFilteredAssessors() {
+    return assessorList.filter(assessor => isAddedInCurrentSession(assessor, 'assessor'));
+}
+
 // ============================================
 // DEMO DATA
 // ============================================
@@ -143,6 +192,7 @@ function checkLogin() {
 
     try {
         const user = JSON.parse(loggedIn);
+        currentSessionId = getCurrentSessionId();
         if (DOM.usernameDisplay && DOM.userRoleDisplay) {
             DOM.usernameDisplay.textContent = user.username;
             DOM.userRoleDisplay.textContent = user.userRole;
@@ -192,6 +242,7 @@ function showAccessDenied() {
 
 function logout() {
     sessionStorage.removeItem('loggedInUser');
+    sessionStorage.removeItem('dashboardSessionId');
     if (DOM.userInfo) DOM.userInfo.style.display = 'none';
     if (DOM.loginBtn) {
         DOM.loginBtn.textContent = 'LOGIN';
@@ -402,7 +453,8 @@ function saveAccountAdd() {
         password: document.getElementById('add_account_password').value.trim(),
         userRole: document.getElementById('add_account_role').value.trim(),
         contact: document.getElementById('add_account_contact').value.trim(),
-        createdAt: currentDate  // Auto-generated date
+        createdAt: currentDate,  // Auto-generated date
+        createdAtSession: currentSessionId
     };
 
     accountList.push(newAccount);
@@ -419,7 +471,8 @@ function saveAccountAdd() {
             dept: '-',
             email: newAccount.email,
             contact: newAccount.contact,
-            assignedStudentIds: []
+            assignedStudentIds: [],
+            createdAtSession: currentSessionId
         };
 
         assessorList.push(newAssessor);
@@ -458,32 +511,46 @@ function addNewAccount() {
 function renderAccountTable() {
     if (!DOM.accountTbody) return;
 
-    if (accountList.length === 0) {
-        DOM.accountTbody.innerHTML = `<tr><td colspan="6" style="text-align:center">No accounts added yet</td></tr>`;
-        return;
+    // Get only session-added accounts
+    const sessionAccounts = getSessionFilteredAccounts();
+
+    // Clear the table first
+    DOM.accountTbody.innerHTML = '';
+
+    if (sessionAccounts.length === 0) {
+        // Show message but DON'T return - we still need to show add form
+        const emptyMessageRow = document.createElement('tr');
+        emptyMessageRow.innerHTML = `<td colspan="7" style="text-align:center">No accounts added in this session yet. Click "Add new account" to add.</td>`;
+        DOM.accountTbody.appendChild(emptyMessageRow);
+    } else {
+        sessionAccounts.sort((a, b) => a.username.localeCompare(b.username));
+
+        sessionAccounts.forEach((account) => {
+            const originalIndex = accountList.findIndex(a => a.email === account.email && a.createdAtSession === account.createdAtSession);
+            const row = document.createElement('tr');
+            row.setAttribute('data-account-index', originalIndex);
+            row.innerHTML = `
+                <td>${escapeHtml(account.username)}</td>
+                <td>${escapeHtml(account.email)}</td>
+                <td>${escapeHtml(account.password)}</td>
+                <td>${escapeHtml(account.userRole)}</td>
+                <td>${escapeHtml(account.contact)}</td>
+                <td>${escapeHtml(account.createdAt)}</td>
+                <td class="action-cell">
+                    <button class="table-btn" id="edit-account-btn" data-index="${originalIndex}">Edit</button>
+                    <button class="table-btn" id="delete-account-btn" data-index="${originalIndex}">Delete</button>
+                </td>
+            `;
+            DOM.accountTbody.appendChild(row);
+        });
     }
 
-    accountList.sort((a, b) => a.username.localeCompare(b.username));
-
-    DOM.accountTbody.innerHTML = accountList.map((account, i) => `
-        <tr data-account-index="${i}">
-            <td>${escapeHtml(account.username)}</td>
-            <td>${escapeHtml(account.email)}</td>
-            <td>${escapeHtml(account.password)}</td>
-            <td>${escapeHtml(account.userRole)}</td>
-            <td>${escapeHtml(account.contact)}</td>
-            <td>${escapeHtml(account.createdAt)}</td>
-            <td class="action-cell">
-                <button class="table-btn" id="edit-account-btn" data-index="${i}">Edit</button>
-                <button class="table-btn" id="delete-account-btn" data-index="${i}">Delete</button>
-            </td>
-        </tr>
-   `).join('');
-
+    // Always check if we need to show the add form
     if (isAccountAddFormVisible) {
         insertAccountAddForm();
     }
 
+    // Re-attach event listeners
     document.querySelectorAll('#edit-account-btn, [id^="edit-account-btn"]').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -699,7 +766,8 @@ function saveStudentAdd() {
         contact: document.getElementById('add_contact').value.trim(),
         status: newStatus,
         assigned_assessor: newAssessorName,
-        internshipPeriod: internshipPeriod
+        internshipPeriod: internshipPeriod,
+        createdAtSession: currentSessionId
     };
 
     studentList.push(newStudent);
@@ -859,31 +927,40 @@ function handleAssessorChange(e) {
 function renderStudentTable() {
     if (!DOM.studentTbody) return;
 
-    if (studentList.length === 0) {
-        DOM.studentTbody.innerHTML = `<tr><td colspan="11" style="text-align:center">No students added yet</td></tr>`;
-        return;
+    const sessionStudents = getSessionFilteredStudents();
+
+    DOM.studentTbody.innerHTML = '';
+
+    if (sessionStudents.length === 0) {
+        const emptyMessageRow = document.createElement('tr');
+        emptyMessageRow.innerHTML = `<td colspan="11" style="text-align:center">No students added in this session yet. Click "Add new student" to add.</td>`;
+        DOM.studentTbody.appendChild(emptyMessageRow);
+    } else {
+        sessionStudents.sort((a, b) => (parseInt(a.id.replace(/\D/g, '')) || 0) - (parseInt(b.id.replace(/\D/g, '')) || 0));
+
+        sessionStudents.forEach((student) => {
+            const originalIndex = studentList.findIndex(s => s.id === student.id && s.createdAtSession === student.createdAtSession);
+            const row = document.createElement('tr');
+            row.setAttribute('data-student-index', originalIndex);
+            row.innerHTML = `
+                <td>${escapeHtml(student.id)}</td>
+                <td>${escapeHtml(student.name)}</td>
+                <td>${escapeHtml(student.programme)}</td>
+                <td>${escapeHtml(student.company)}</td>
+                <td>${escapeHtml(student.year)}</td>
+                <td>${escapeHtml(student.email)}</td>
+                <td>${escapeHtml(student.contact)}</td>
+                <td>${escapeHtml(student.internshipPeriod || '—')}</td>
+                <td class="status-cell">${escapeHtml(student.status || '—')}</td>
+                <td class="assessor-cell">${escapeHtml(student.assigned_assessor || '—')}</td>
+                <td class="action-cell">
+                    <button class="table-btn" id="edit-student-btn" data-index="${originalIndex}">Edit</button>
+                    <button class="table-btn" id="delete-student-btn" data-index="${originalIndex}">Delete</button>
+                </td>
+            `;
+            DOM.studentTbody.appendChild(row);
+        });
     }
-
-    studentList.sort((a, b) => (parseInt(a.id.replace(/\D/g, '')) || 0) - (parseInt(b.id.replace(/\D/g, '')) || 0));
-
-    DOM.studentTbody.innerHTML = studentList.map((student, i) => `
-        <tr data-student-index="${i}">
-            <td>${escapeHtml(student.id)}</td>
-            <td>${escapeHtml(student.name)}</td>
-            <td>${escapeHtml(student.programme)}</td>
-            <td>${escapeHtml(student.company)}</td>
-            <td>${escapeHtml(student.year)}</td>
-            <td>${escapeHtml(student.email)}</td>
-            <td>${escapeHtml(student.contact)}</td>
-            <td>${escapeHtml(student.internshipPeriod || '—')}</td>
-            <td class="status-cell">${escapeHtml(student.status || '—')}</td>
-            <td class="assessor-cell">${escapeHtml(student.assigned_assessor || '—')}</td>
-            <td class="action-cell">
-                <button class="table-btn" id="edit-student-btn" data-index="${i}">Edit</button>
-                <button class="table-btn" id="delete-student-btn" data-index="${i}">Delete</button>
-            </td>
-        </tr>
-    `).join('');
 
     if (isStudentAddFormVisible) {
         insertStudentAddForm();
@@ -1127,7 +1204,8 @@ function saveAssessorAdd() {
         dept: document.getElementById('add_assessor_dept').value.trim(),
         email: document.getElementById('add_assessor_email').value.trim(),
         contact: document.getElementById('add_assessor_contact').value.trim(),
-        assignedStudentIds: studentIdsArray
+        assignedStudentIds: studentIdsArray,
+        createdAtSession: currentSessionId
     };
 
     assessorList.push(newAssessor);
@@ -1171,26 +1249,32 @@ function addNewAssessor() {
 function renderAssessorTable() {
     if (!DOM.assessorTbody) return;
 
-    if (assessorList.length === 0) {
-        DOM.assessorTbody.innerHTML = `<tr><td colspan="7" style="text-align:center">No assessors added yet</td></tr>`;
-        return;
-    }
+    const sessionAssessors = getSessionFilteredAssessors();
 
-    assessorList.sort((a, b) => (parseInt(a.id.replace(/\D/g, '')) || 0) - (parseInt(b.id.replace(/\D/g, '')) || 0));
+    DOM.assessorTbody.innerHTML = '';
 
-    DOM.assessorTbody.innerHTML = assessorList.map((assessor, i) => {
-        let assignedStudents = '';
-        if (assessor.assignedStudentIds && assessor.assignedStudentIds.length > 0) {
-            const studentNames = (assessor.assignedStudentIds || [])
-                .map(id => studentList.find(s => s.id === id)?.name || id).filter(name => name);
+    if (sessionAssessors.length === 0) {
+        const emptyMessageRow = document.createElement('tr');
+        emptyMessageRow.innerHTML = `<td colspan="8" style="text-align:center">No assessors added in this session yet. Click "Add new assessor" to add.</td>`;
+        DOM.assessorTbody.appendChild(emptyMessageRow);
+    } else {
+        sessionAssessors.sort((a, b) => (parseInt(a.id.replace(/\D/g, '')) || 0) - (parseInt(b.id.replace(/\D/g, '')) || 0));
 
-            assignedStudents = `<div class="assigned-list">${studentNames.map(name => `<span>${escapeHtml(name)}</span>`).join('')}</div>`;
-        } else {
-            assignedStudents = '<div class="assigned-list"><span>—</span></div>';
-        }
+        sessionAssessors.forEach((assessor) => {
+            const originalIndex = assessorList.findIndex(a => a.id === assessor.id && a.createdAtSession === assessor.createdAtSession);
 
-        return `
-            <tr data-assessor-index="${i}">
+            let assignedStudents = '';
+            if (assessor.assignedStudentIds && assessor.assignedStudentIds.length > 0) {
+                const studentNames = (assessor.assignedStudentIds || [])
+                    .map(id => studentList.find(s => s.id === id)?.name || id).filter(name => name);
+                assignedStudents = `<div class="assigned-list">${studentNames.map(name => `<span>${escapeHtml(name)}</span>`).join('')}</div>`;
+            } else {
+                assignedStudents = '<div class="assigned-list"><span>—</span></div>';
+            }
+
+            const row = document.createElement('tr');
+            row.setAttribute('data-assessor-index', originalIndex);
+            row.innerHTML = `
                 <td>${escapeHtml(assessor.id)}</td>
                 <td>${escapeHtml(assessor.name)}</td>
                 <td>${escapeHtml(assessor.role || '—')}</td>
@@ -1199,11 +1283,13 @@ function renderAssessorTable() {
                 <td>${escapeHtml(assessor.contact)}</td>
                 <td>${assignedStudents}</td>
                 <td class="action-cell">
-                    <button class="table-btn" id="edit-assessor-btn" data-index="${i}">Edit</button>
-                    <button class="table-btn" id="delete-assessor-btn" data-index="${i}">Delete</button>
+                    <button class="table-btn" id="edit-assessor-btn" data-index="${originalIndex}">Edit</button>
+                    <button class="table-btn" id="delete-assessor-btn" data-index="${originalIndex}">Delete</button>
                 </td>
-            </tr>`;
-    }).join('');
+            `;
+            DOM.assessorTbody.appendChild(row);
+        });
+    }
 
     if (isAssessorAddFormVisible) {
         insertAssessorAddForm();
@@ -1438,20 +1524,6 @@ function renderCompletedTable(completed, assessor) {
     });
 }
 
-
-// ============================================
-// GENERAL FUNCTIONS
-// ============================================
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function (m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
-}
 
 // ============================================
 // BEGIN INITIALIZATION */
