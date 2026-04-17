@@ -1,6 +1,3 @@
--- phpMyAdmin SQL Dump
--- Database: `student_records`
-
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
@@ -30,6 +27,7 @@ CREATE TABLE `user` (
 CREATE TABLE `assessor` (
   `assessor_id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
+  `name` varchar(100) DEFAULT NULL,
   `department` varchar(100) DEFAULT NULL,
   `role` varchar(50) DEFAULT 'Assessor',
   PRIMARY KEY (`assessor_id`),
@@ -95,49 +93,48 @@ INSERT INTO `assessment_criteria` (`criteria_id`, `criteria_name`, `criteria_key
 (8, 'Time Management', 'time', 15);
 
 -- --------------------------------------------------------
--- Table: evaluation
+-- Table: evaluation (UPDATED - uses internship_id)
 -- --------------------------------------------------------
 CREATE TABLE `evaluation` (
   `evaluation_id` int(11) NOT NULL AUTO_INCREMENT,
-  `student_id` int(11) NOT NULL,
-  `assessor_id` int(11) NOT NULL,
+  `internship_id` int(11) NOT NULL,
   `scores` text,
   `weighted_total` decimal(5,2) DEFAULT NULL,
   `remarks` text,
   `evaluated_at` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`evaluation_id`),
-  KEY `fk_evaluation_student` (`student_id`),
-  KEY `fk_evaluation_assessor` (`assessor_id`),
-  CONSTRAINT `fk_evaluation_assessor` FOREIGN KEY (`assessor_id`) REFERENCES `assessor` (`assessor_id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_evaluation_student` FOREIGN KEY (`student_id`) REFERENCES `student` (`student_id`) ON DELETE CASCADE
+  UNIQUE KEY `unique_internship` (`internship_id`),
+  CONSTRAINT `fk_evaluation_internship` FOREIGN KEY (`internship_id`) REFERENCES `internship` (`internship_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
--- Insert Sample Data (with hashed passwords - all use 'password123')
+-- Insert Sample Data (with hashed passwords)
 -- --------------------------------------------------------
 
--- Password: 'password123' hashed
--- Admin user
 INSERT INTO `user` (`user_id`, `username`, `email`, `password`, `role`, `contact`, `date_created`) VALUES
-(1, 'Admin User', 'admin@nottingham.edu', '$2y$10$w3PyWbcpINBj1HsNQrvu3O5IHyQJjshJnlkM1TROVvk3g4RWD2iCm', 'Administrator', '012-3456789', CURDATE()),
-(2, 'Jane Smith', 'jane.smith@nottingham.edu', '$2y$10$5.xrRg2UNdWZ0kK5OkZNMewDT/bRsu42vOcPNQngUxL54rMPq2yGi', 'Assessor', '012-3456790', CURDATE()),
+(1, 'Admin One', 'admin@nottingham.edu', '$2y$10$w3PyWbcpINBj1HsNQrvu3O5IHyQJjshJnlkM1TROVvk3g4RWD2iCm', 'Administrator', '012-345-6789', CURDATE()),
+(2, 'Jane Smith', 'jane.smith@nottingham.edu', '$2y$10$5.xrRg2UNdWZ0kK5OkZNMewDT/bRsu42vOcPNQngUxL54rMPq2yGi', 'Assessor', '012-345-6790', CURDATE()),
 (3, 'Alan Grant', 'a.grant@nottingham.edu', '$2y$10$onuAxMZdzP1dise985R0yOd8suJdNfAWcvweCeUO6nmiwomOgJKye', 'Assessor', '012-3456791', CURDATE());
 
 -- Insert assessors
-INSERT INTO `assessor` (`assessor_id`, `user_id`, `department`, `role`) VALUES
-(1, 2, 'Computer Science', 'Senior Assessor'),
-(2, 3, 'Engineering', 'Assessor');
+INSERT INTO `assessor` (`assessor_id`, `user_id`, `name`, `department`, `role`) VALUES
+(1, 2, 'Jane Smith', 'Computer Science', 'Senior Assessor'),
+(2, 3, 'Alan Grant', 'Engineering', 'Assessor');
 
 -- Insert students
 INSERT INTO `student` (`student_id`, `name`, `student_email`, `student_contact`, `enrollment_year`, `programme`, `assigned_assessor`) VALUES
-(1, 'Emma Watson', 'emma.watson@student.edu', '0111222333', 2023, 'Computer Science', 1),
-(2, 'James Brown', 'james.brown@student.edu', '0444555666', 2022, 'Engineering', 1),
-(3, 'Luis Chen', 'luis.chen@student.edu', '0777888999', 2024, 'Business', 2);
+(1, 'Emma Watson', 'emma.watson@student.edu', '011-122-2333', 2023, 'Computer Science', 1),
+(2, 'James Brown', 'james.brown@student.edu', '044-455-5666', 2022, 'Engineering', 1),
+(3, 'Luis Chen', 'luis.chen@student.edu', '077-788-8999', 2024, 'Business', 2),
+(4, 'Sophia Lee', 'sophia.lee@student.edu', '022-233-3444', 2023, 'Architecture', 1),
+(5, 'Michael Davis', 'michael.davis@student.edu', '055-566-6777', 2024, 'Computer Science', 1);
 
 -- Insert internships
 INSERT INTO `internship` (`internship_id`, `student_id`, `assessor_id`, `company_name`, `start_date`, `end_date`, `status`, `internship_notes`) VALUES
-(1, 1, 1, 'Innovate Tech', '2025-06-01', '2025-08-01', 'Evaluated', 'Excellent performance'),
+(1, 1, 1, 'Innovate Tech', '2025-06-01', '2025-08-01', 'Pending', 'Excellent performance so far'),
 (2, 2, 1, 'BuildCorp', '2025-06-05', '2025-08-05', 'Ongoing', NULL),
-(3, 3, 2, 'FinGroup', '2025-06-10', '2025-08-10', 'Pending', NULL);
+(3, 3, 2, 'FinGroup', '2025-06-10', '2025-08-10', 'Pending', NULL),
+(4, 4, 1, 'DesignStudio', '2025-06-15', '2025-08-15', 'Pending', NULL),
+(5, 5, 1, 'Innovate Tech', '2025-06-20', '2025-08-20', 'Pending', NULL);
 
 COMMIT;

@@ -49,8 +49,8 @@ class StudentValidator {
 }
 
 class StatusCalculator {
-    public static function calculate($startDate, $endDate, $isEvaluated) {
-        if ($isEvaluated) return 'Evaluated';
+    public static function calculate($startDate, $endDate, $hasEvaluation) {
+        if ($hasEvaluation) return 'Evaluated';
         
         if (!empty($endDate)) {
             $today = new DateTime();
@@ -64,21 +64,27 @@ class StatusCalculator {
     }
     
     public static function updateAllStatuses($pdo) {
-        $evalStmt = $pdo->query("SELECT DISTINCT student_id FROM evaluation");
+        // Get internships that have evaluations
+        $evalStmt = $pdo->query("
+            SELECT DISTINCT i.internship_id 
+            FROM internship i
+            INNER JOIN evaluation e ON i.internship_id = e.internship_id
+        ");
         $evaluatedSet = array_flip($evalStmt->fetchAll(PDO::FETCH_COLUMN));
         
-        $stmt = $pdo->query("SELECT student_id, start_date, end_date FROM internship");
+        $stmt = $pdo->query("SELECT internship_id, student_id, start_date, end_date FROM internship");
         $updatedCount = 0;
         
         foreach ($stmt->fetchAll() as $internship) {
+            $hasEvaluation = isset($evaluatedSet[$internship['internship_id']]);
             $status = self::calculate(
                 $internship['start_date'],
                 $internship['end_date'],
-                isset($evaluatedSet[$internship['student_id']])
+                $hasEvaluation
             );
             
-            $updateStmt = $pdo->prepare("UPDATE internship SET status = ? WHERE student_id = ?");
-            $updateStmt->execute([$status, $internship['student_id']]);
+            $updateStmt = $pdo->prepare("UPDATE internship SET status = ? WHERE internship_id = ?");
+            $updateStmt->execute([$status, $internship['internship_id']]);
             $updatedCount++;
         }
         
@@ -128,8 +134,9 @@ class StudentRepository {
             SELECT 
                 s.student_id, s.name, s.programme, s.student_email, s.student_contact,
                 s.enrollment_year, s.assigned_assessor, u.username as assessor_name,
-                i.company_name, i.start_date, i.end_date, i.status as internship_status,
-                (SELECT COUNT(*) FROM evaluation e WHERE e.student_id = s.student_id) as has_evaluation
+                a.department as assessor_department,
+                i.internship_id, i.company_name, i.start_date, i.end_date, i.status as internship_status,
+                (SELECT COUNT(*) FROM evaluation e WHERE e.internship_id = i.internship_id) as has_evaluation
             FROM student s
             LEFT JOIN assessor a ON s.assigned_assessor = a.assessor_id
             LEFT JOIN user u ON a.user_id = u.user_id
@@ -154,7 +161,8 @@ class StudentRepository {
                 'start_date' => $student['start_date'],
                 'end_date' => $student['end_date'],
                 'status' => $student['internship_status'] ?? 'Ongoing',
-                'has_evaluation' => $student['has_evaluation'] > 0
+                'has_evaluation' => $student['has_evaluation'] > 0,
+                'internship_id' => $student['internship_id']
             ];
         }
         
@@ -200,7 +208,12 @@ class StudentRepository {
         $this->pdo->beginTransaction();
         
         try {
-            $evalCheck = $this->pdo->prepare("SELECT COUNT(*) FROM evaluation WHERE student_id = ?");
+            // Check if internship has evaluation
+            $evalCheck = $this->pdo->prepare("
+                SELECT COUNT(*) FROM evaluation e
+                JOIN internship i ON e.internship_id = i.internship_id
+                WHERE i.student_id = ?
+            ");
             $evalCheck->execute([$data['student_id']]);
             $isEvaluated = $evalCheck->fetchColumn() > 0;
             

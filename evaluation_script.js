@@ -173,7 +173,8 @@ async function loadDataFromAPI() {
             student_id: s.student_id,
             start_date: s.start_date,
             end_date: s.end_date,
-            assigned_assessor_id: s.assigned_assessor
+            assigned_assessor_id: s.assigned_assessor,
+            internship_id: s.internship_id
         }));
 
         State.assessorList = assessorsArray.map(a => ({

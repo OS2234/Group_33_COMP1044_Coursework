@@ -5,6 +5,7 @@ require_once 'config.php';
 // SERVICE CLASSES
 // ============================================
 
+
 class AssessorIdGenerator {
     private $pdo;
     private $cache = [];
@@ -41,6 +42,7 @@ switch($method) {
             $stmt = $pdo->query("
                 SELECT 
                     a.assessor_id,
+                    a.name,
                     a.department,
                     a.role as assessor_role,
                     u.user_id,

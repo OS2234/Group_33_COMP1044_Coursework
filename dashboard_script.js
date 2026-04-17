@@ -141,7 +141,8 @@ async function loadDataFromAPI() {
             student_id: s.student_id,
             start_date: s.start_date,
             end_date: s.end_date,
-            assigned_assessor_id: s.assigned_assessor
+            assigned_assessor_id: s.assigned_assessor,
+            internship_id: s.internship_id
         }));
 
         fullAssessorList = assessorsArray.map(a => ({
@@ -529,10 +530,7 @@ function insertAccountAddForm() {
     addRow.innerHTML = `
         <td><input type="text" id="add_account_username" placeholder="Username" style="width:80px"></td>
         <td><input type="email" id="add_account_email" placeholder="Email" style="width:110px"></td>
-        <td>
-            <input type="text" id="add_account_password" placeholder="Will be generated" 
-                   style="width:140px; background:#f0f0f0; color:#666;" readonly>
-        </td>
+        <td style="color: rgba(255,255,255,0.7); font-size: 14px;">Auto-generated on save</td>
         <td>
             <select id="add_account_role" style="width:110px; padding:4px;">
                 <option value="Administrator">Administrator</option>
@@ -857,13 +855,6 @@ function insertStudentAddForm() {
     addRow.className = 'add-form-row';
     addRow.id = 'student-add-form-row';
 
-    // Remove status options - status will be auto-calculated
-    const programmeOptions = ['Computer Science', 'Business', 'Engineering'];
-    const programmeDropdown = `<select id="add_programme" class="add-dropdown" style="width:120px; padding:4px; border-radius:4px;">
-        <option value="">-- Select Programme --</option>
-        ${programmeOptions.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
-    </select>`;
-
     const assessorNames = ['', ...fullAssessorList.map(a => a.name)];
     const assessorDropdown = `<select id="add_assessor" class="add-dropdown" style="width:120px; padding:4px; border-radius:4px;">
         ${assessorNames.map(name => `<option value="${name}">${name || '—'}</option>`).join('')}
@@ -872,7 +863,7 @@ function insertStudentAddForm() {
     addRow.innerHTML = `
         <td style="color: cyan; font-weight: bold;">Auto-generated</td>
         <td><input type="text" id="add_student_name" placeholder="Full name" style="width:110px"></td>
-        <td class="programme-cell">${programmeDropdown}</td>
+        <td class="programme-cell"><input type="text" id="add_programme" placeholder="Programme" style="width:120px;"></td>
         <td><input type="text" id="add_company" placeholder="Company" style="width:110px"></td>
         <td><input type="text" id="add_year" placeholder="Year" style="width:70px"></td>
         <td><input type="email" id="add_email" placeholder="Email" style="width:130px"></td>
@@ -932,9 +923,9 @@ async function saveStudentAdd() {
         return;
     }
 
-    const programme = document.getElementById('add_programme').value;
+    const programme = document.getElementById('add_programme').value.trim();
     if (!programme) {
-        alert('Please select a programme');
+        alert('Please enter a programme');
         document.getElementById('add_programme').focus();
         return;
     }
@@ -1079,11 +1070,6 @@ function enableEditStudentRow(index) {
         ${statusOptions.map(opt => `<option value="${opt}" ${student.status === opt ? 'selected' : ''}>${opt}</option>`).join('')}
     </select>`;
 
-    const programmeOptions = ['Computer Science', 'Business', 'Engineering'];
-    const programmeDropdown = `<select id="edit_programme_${index}" style="width:120px; padding:4px; border-radius:4px;">
-        ${programmeOptions.map(opt => `<option value="${opt}" ${student.programme === opt ? 'selected' : ''}>${opt}</option>`).join('')}
-    </select>`;
-
     const assessorNames = ['', ...fullAssessorList.map(a => a.name)];
     const assessorDropdown = `<select id="edit_assigned_assessor_${index}" style="width:120px; padding:4px; border-radius:4px;">
         ${assessorNames.map(name => `<option value="${name}" ${student.assigned_assessor === name ? 'selected' : ''}>${name || '—'}</option>`).join('')}
@@ -1092,7 +1078,7 @@ function enableEditStudentRow(index) {
     row.innerHTML = `
         <td><input type="text" value="${student.id || ''}" id="edit_id_${index}" style="width:70px; padding:3px;" readonly></td>
         <td><input type="text" value="${student.name || ''}" id="edit_name_${index}" style="width:100px; padding:3px;"></td>
-        <td class="programme-cell">${programmeDropdown}</td>
+        <td class="programme-cell"><input type="text" id="edit_programme_${index}" value="${escapeHtml(student.programme || '')}" style="width:120px;"></td>
         <td><input type="text" value="${student.company || ''}" id="edit_comp_${index}" style="width:100px; padding:3px;"></td>
         <td><input type="text" value="${student.year || ''}" id="edit_year_${index}" style="width:70px; padding:3px;"></td>
         <td><input type="email" value="${student.email || ''}" id="edit_email_${index}" style="width:120px; padding:3px;"></td>
@@ -1100,13 +1086,13 @@ function enableEditStudentRow(index) {
         <td style="min-width: 200px;">
             <input type="date" value="${student.start_date || ''}" id="edit_start_${index}" style="width: 120px; margin-right: 5px;"> to 
             <input type="date" value="${student.end_date || ''}" id="edit_end_${index}" style="width: 120px;">
-          </td>
+        </td>
         <td class="status-cell">${escapeHtml(student.status || '—')}</td>
         <td class="assessor-cell">${assessorDropdown}</td>
         <td class="action-cell">
             <button class="table-btn save-student-btn" data-index="${index}">Save</button>
             <button class="table-btn cancel-student-btn" data-index="${index}">Cancel</button>
-          </td>
+        </td>
     `;
 
     document.querySelector(`.save-student-btn[data-index="${index}"]`).addEventListener('click', () => saveStudentEdit(index));
@@ -1134,9 +1120,10 @@ async function saveStudentEdit(index) {
         return;
     }
 
-    const programme = document.getElementById(`edit_programme_${index}`).value;
+    // Get programme as text input value
+    const programme = document.getElementById(`edit_programme_${index}`).value.trim();
     if (!programme) {
-        alert('Please select a programme');
+        alert('Please enter a programme');
         return;
     }
 
@@ -1513,18 +1500,21 @@ function renderAssessorDashboard(assessor) {
         }
     });
 
-    const latestPending = [...pending].sort((a, b) => b.student_id - a.student_id).slice(0, 3);
-    const latestCompleted = [...completed].sort((a, b) => {
+    const sortedPending = [...pending].sort((a, b) => b.student_id - a.student_id);
+
+    const sortedCompleted = [...completed].sort((a, b) => {
         const dateA = a.evaluation?.evaluatedAt ? new Date(a.evaluation.evaluatedAt) : new Date(0);
         const dateB = b.evaluation?.evaluatedAt ? new Date(b.evaluation.evaluatedAt) : new Date(0);
         return dateB - dateA;
-    }).slice(0, 3);
+    });
+
+    const recentCompleted = sortedCompleted.slice(0, 3);
 
     document.getElementById('pendingCount').textContent = pending.length;
     document.getElementById('completedCount').textContent = completed.length;
 
-    renderPendingTable(latestPending, assessor);
-    renderCompletedTable(latestCompleted, assessor);
+    renderPendingTable(sortedPending, assessor);
+    renderCompletedTable(recentCompleted, assessor);
 }
 
 function renderPendingTable(pending, assessor) {
@@ -1549,7 +1539,7 @@ function renderPendingTable(pending, assessor) {
                 <button class="evaluate-btn" data-student-id="${student.student_id}" data-assessor-id="${assessor.raw_id}">
                     Evaluate
                 </button>
-              </td>
+                </td>
             </tr>
     `).join('');
 
@@ -1561,7 +1551,6 @@ function renderPendingTable(pending, assessor) {
         });
     });
 }
-
 
 function renderCompletedTable(completed, assessor) {
     if (!DOM.completedTbody) return;
@@ -1591,7 +1580,7 @@ function renderCompletedTable(completed, assessor) {
                     <button class="view-btn" data-student-id="${student.student_id}" data-assessor-id="${assessor.raw_id}">
                         View
                     </button>
-                  </td>
+                    </td>
             </tr>
         `;
     }).join('');

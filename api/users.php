@@ -129,42 +129,67 @@ class UserRepository {
     }
     
     public function update($data) {
-        $updates = [];
-        $params = [];
-        $newPlainPassword = null;
-        
-        $fieldMap = [
-            'username' => 'username',
-            'email' => 'email',
-            'userRole' => 'role',
-            'contact' => 'contact'
-        ];
-        
-        foreach ($fieldMap as $inputField => $dbField) {
-            if (isset($data[$inputField])) {
-                $updates[] = "$dbField = ?";
-                $params[] = $data[$inputField];
-            }
+    $updates = [];
+    $params = [];
+    $newPlainPassword = null;
+    
+    $fieldMap = [
+        'username' => 'username',
+        'email' => 'email',
+        'userRole' => 'role',
+        'contact' => 'contact'
+    ];
+    
+    foreach ($fieldMap as $inputField => $dbField) {
+        if (isset($data[$inputField])) {
+            $updates[] = "$dbField = ?";
+            $params[] = $data[$inputField];
         }
-        
-        if (!empty($data['password'])) {
-            $newPlainPassword = $data['password'];
-            $updates[] = "password = ?";
-            $params[] = password_hash($data['password'], PASSWORD_DEFAULT);
-        }
-        
-        if (!empty($updates)) {
-            $params[] = $data['user_id'];
-            $stmt = $this->pdo->prepare("UPDATE user SET " . implode(", ", $updates) . " WHERE user_id = ?");
-            $stmt->execute($params);
-        }
-        
-        return [
-            'success' => true,
-            'password_updated' => ($newPlainPassword !== null),
-            'new_password' => $newPlainPassword
-        ];
     }
+    
+    if (!empty($data['password'])) {
+        $newPlainPassword = $data['password'];
+        $updates[] = "password = ?";
+        $params[] = password_hash($data['password'], PASSWORD_DEFAULT);
+    }
+    
+    if (!empty($updates)) {
+        $params[] = $data['user_id'];
+        $stmt = $this->pdo->prepare("UPDATE user SET " . implode(", ", $updates) . " WHERE user_id = ?");
+        $stmt->execute($params);
+    }
+    
+    // Also update the assessor table if this is an assessor
+    if (isset($data['userRole']) && $data['userRole'] === 'Assessor') {
+        $assessorUpdates = [];
+        $assessorParams = [];
+        
+        if (isset($data['username'])) {
+            $assessorUpdates[] = "name = ?";
+            $assessorParams[] = $data['username'];
+        }
+        if (isset($data['department'])) {
+            $assessorUpdates[] = "department = ?";
+            $assessorParams[] = $data['department'];
+        }
+        if (isset($data['assessor_role'])) {
+            $assessorUpdates[] = "role = ?";
+            $assessorParams[] = $data['assessor_role'];
+        }
+        
+        if (!empty($assessorUpdates)) {
+            $assessorParams[] = $data['user_id'];
+            $stmt = $this->pdo->prepare("UPDATE assessor SET " . implode(", ", $assessorUpdates) . " WHERE user_id = ?");
+            $stmt->execute($assessorParams);
+        }
+    }
+    
+    return [
+        'success' => true,
+        'password_updated' => ($newPlainPassword !== null),
+        'new_password' => $newPlainPassword
+    ];
+}
     
     public function delete($userId) {
         $stmt = $this->pdo->prepare("DELETE FROM user WHERE user_id = ?");
@@ -190,16 +215,17 @@ class UserRepository {
     }
     
     private function createAssessor($userId, $data) {
-        $stmt = $this->pdo->prepare("
-            INSERT INTO assessor (user_id, department, role)
-            VALUES (?, ?, ?)
-        ");
-        $stmt->execute([
-            $userId,
-            $data['department'] ?? '',
-            $data['assessor_role'] ?? 'Assessor'
-        ]);
-    }
+    $stmt = $this->pdo->prepare("
+        INSERT INTO assessor (user_id, name, department, role)
+        VALUES (?, ?, ?, ?)
+    ");
+    $stmt->execute([
+        $userId,
+        $data['username'],  // This is the assessor's name
+        $data['department'] ?? '',
+        $data['assessor_role'] ?? 'Assessor'
+    ]);
+}
 }
 
 // ============================================

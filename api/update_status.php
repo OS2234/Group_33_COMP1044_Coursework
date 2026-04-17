@@ -5,8 +5,8 @@ require_once __DIR__ . '/config.php';
 header('Content-Type: application/json');
 
 
-function calculateAutoStatus($startDate, $endDate, $isEvaluated) {
-    if ($isEvaluated) {
+function calculateAutoStatus($startDate, $endDate, $hasEvaluation) {
+    if ($hasEvaluation) {
         return 'Evaluated';
     }
     
@@ -26,14 +26,17 @@ function calculateAutoStatus($startDate, $endDate, $isEvaluated) {
 
 
 function updateAllStudentStatuses($pdo) {
-    // Get evaluated students
-    $evalStmt = $pdo->query("SELECT DISTINCT student_id FROM evaluation");
-    $evaluatedStudents = $evalStmt->fetchAll(PDO::FETCH_COLUMN);
-    $evaluatedSet = array_flip($evaluatedStudents);
+    // Get internships that have evaluations
+    $evalStmt = $pdo->query("
+        SELECT DISTINCT i.internship_id 
+        FROM internship i
+        INNER JOIN evaluation e ON i.internship_id = e.internship_id
+    ");
+    $evaluatedSet = array_flip($evalStmt->fetchAll(PDO::FETCH_COLUMN));
     
     // Get all internships
     $stmt = $pdo->query("
-        SELECT i.student_id, i.start_date, i.end_date, s.name
+        SELECT i.internship_id, i.student_id, i.start_date, i.end_date, s.name as student_name
         FROM internship i
         JOIN student s ON i.student_id = s.student_id
     ");
@@ -41,19 +44,20 @@ function updateAllStudentStatuses($pdo) {
     $updatedStudents = [];
     
     foreach ($internships as $internship) {
-        $isEvaluated = isset($evaluatedSet[$internship['student_id']]);
+        $hasEvaluation = isset($evaluatedSet[$internship['internship_id']]);
         $autoStatus = calculateAutoStatus(
             $internship['start_date'],
             $internship['end_date'],
-            $isEvaluated
+            $hasEvaluation
         );
         
-        $updateStmt = $pdo->prepare("UPDATE internship SET status = ? WHERE student_id = ?");
-        $updateStmt->execute([$autoStatus, $internship['student_id']]);
+        $updateStmt = $pdo->prepare("UPDATE internship SET status = ? WHERE internship_id = ?");
+        $updateStmt->execute([$autoStatus, $internship['internship_id']]);
         
         $updatedStudents[] = [
+            'internship_id' => $internship['internship_id'],
             'student_id' => $internship['student_id'],
-            'student_name' => $internship['name'],
+            'student_name' => $internship['student_name'],
             'new_status' => $autoStatus
         ];
     }

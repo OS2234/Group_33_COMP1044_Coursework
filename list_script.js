@@ -317,7 +317,6 @@ async function loadDataFromAPI() {
         const assessorsArray = Array.isArray(assessors) ? assessors : [];
         const usersArray = Array.isArray(users) ? users : [];
 
-        // Transform students data - USE formatted_id from API
         studentsList = studentsArray.map(s => ({
             id: s.formatted_id || 'S' + s.student_id,
             raw_id: s.student_id,
@@ -333,7 +332,8 @@ async function loadDataFromAPI() {
             student_id: s.student_id,
             start_date: s.start_date,
             end_date: s.end_date,
-            assigned_assessor_id: s.assigned_assessor
+            assigned_assessor_id: s.assigned_assessor,
+            internship_id: s.internship_id
         }));
 
         // Transform assessors data - USE formatted_id from API
@@ -562,7 +562,6 @@ function renderAssignedStudents() {
 // FILTER DROPDOWNS
 // ============================================
 function populateFilterDropdowns() {
-    // For admin view - assessor filter
     const assessorSelect = document.getElementById('filterStudentAssessor');
     if (assessorSelect) {
         const uniqueAssessors = [...new Set(studentsList.map(s => s.assigned_assessor).filter(Boolean))];
@@ -570,7 +569,6 @@ function populateFilterDropdowns() {
             uniqueAssessors.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('');
     }
 
-    // For both admin and assessor - programme filters
     const programmeSources = ['filterStudentProgramme', 'filterAssignedProgramme'];
     const uniqueProgrammes = [...new Set(studentsList.map(s => s.programme).filter(Boolean))];
 
@@ -1008,7 +1006,6 @@ function generateAccountEditForm(account) {
 function generateStudentEditForm(student) {
     const assessorOptions = ['', ...assessorsList.map(a => a.name)];
     const statusOptions = ['Pending', 'Ongoing', 'Evaluated'];
-    const programmeOptions = ['Computer Science', 'Business', 'Engineering'];
 
     let startDate = '', endDate = '';
     if (student.start_date) startDate = student.start_date;
@@ -1019,10 +1016,7 @@ function generateStudentEditForm(student) {
         <div class="edit-field"><label>Student Name</label><input type="text" id="edit_student_name" value="${escapeHtml(student.name)}"></div>
         <div class="edit-field">
             <label>Programme</label>
-            <select id="edit_programme">
-                <option value="">-- Select Programme --</option>
-                ${programmeOptions.map(opt => `<option value="${opt}" ${student.programme === opt ? 'selected' : ''}>${opt}</option>`).join('')}
-            </select>
+            <input type="text" id="edit_programme" value="${escapeHtml(student.programme || '')}" placeholder="Enter programme">
         </div>
         <div class="edit-field"><label>Internship Company</label><input type="text" id="edit_company" value="${escapeHtml(student.company || '')}"></div>
         <div class="edit-field"><label>Enrolment Year</label><input type="text" id="edit_year" value="${escapeHtml(student.year || '')}"></div>
@@ -1101,7 +1095,7 @@ async function updateStudentFromModal() {
     }
 
     const name = document.getElementById('edit_student_name').value;
-    const programme = document.getElementById('edit_programme').value;
+    const programme = document.getElementById('edit_programme').value.trim();
     const company = document.getElementById('edit_company').value;
     const yearValue = document.getElementById('edit_year').value;
     const email = document.getElementById('edit_student_email').value;
@@ -1138,7 +1132,7 @@ async function updateStudentFromModal() {
     }
 
     if (!programme) {
-        alert('Please select a programme');
+        alert('Please enter a programme');
         return false;
     }
 
@@ -1170,7 +1164,6 @@ async function updateStudentFromModal() {
         return false;
     }
 }
-
 async function updateAccountFromModal() {
     const account = accountsList.find(a => a.email === currentEditId);
     if (!account) {
