@@ -43,7 +43,7 @@ This system provides:
    
 2. Click the **Import** tab
 
-3. Select the `localhost.sql` file from the project folder
+3. Select the `COMP1044_Database.sql` file from the project folder
 
 4. Click **Go** to import the schema and sample data
 
