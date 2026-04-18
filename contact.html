@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Student Internship Evaluation | Contact Support</title>
+    <link rel="stylesheet" href="global_styles.css">
+    <link rel="stylesheet" href="contact_style.css">
+
+</head>
+
+<body>
+    <div class="contact-page-wrapper">
+        <div class="navbar">
+            <div class="icon">
+                <h2 class="logo">University of Nottingham</h2>
+            </div>
+            <div class="menu">
+                <ul>
+                    <li><a href="Internship_Website.html">DASHBOARD</a></li>
+                    <li><a href="list.html" id="listLink">LIST</a></li>
+                    <li><a href="evaluation.html" id="evaluationLink">EVALUATION</a></li>
+                    <li><a href="contact.html">CONTACT</a></li>
+                </ul>
+            </div>
+            <div class="login">
+                <button class="login_btn" id="loginBtn">LOGIN</button>
+                <div class="user-info" id="userInfo" style="display: none;">
+                    <span class="username" id="usernameDisplay"></span>
+                    <span class="user-role" id="userRoleDisplay"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="wrapper">
+            <span class="icon-close">
+                <ion-icon name="close-outline"></ion-icon>
+            </span>
+            <div class="form-box-login">
+                <h2>Login</h2>
+                <form action="#" id="contactLoginForm">
+                    <div class="input-box">
+                        <span class="icon"><ion-icon name="mail"></ion-icon></span>
+                        <input type="email" id="contactLoginEmail" required>
+                        <label>Email</label>
+                    </div>
+                    <div class="input-box">
+                        <span class="icon"><ion-icon name="lock-closed"></ion-icon></span>
+                        <input type="password" id="contactLoginPassword" required>
+                        <label>Password</label>
+                    </div>
+                    <div class="remember-forgot">
+                        <label><input type="checkbox">Remember me</label>
+                        <a href="#">Forgot Password</a>
+                    </div>
+                    <button type="submit" class="btn">Login</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="contact-content">
+            <div class="contact-container">
+                <div class="contact-header">
+                    <h1>📞 Administrator Support Center</h1>
+                    <p>Offers assistance with account-related issues and updating list details</p>
+                </div>
+                <div class="admin-table-wrapper">
+                    <h2 class="table-title">👥 Administrator Contact List</h2>
+                    <div class="scrollable-table">
+                        <table id="adminContactTable">
+                            <thead>
+                                <tr>
+                                    <th>Administrator Name</th>
+                                    <th>Email Address</th>
+                                    <th>Contact Number</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminContactTableBody">
+                                <!-- Dynamic admin contacts will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="support-note">
+                    <p><strong>🔐 Having issues with your account?</strong> Please contact any administrator above with
+                        your:
+                    </p>
+                    <p>• Full Name & Assessor ID <br>• Registered Email Address <br>• Brief description of the issue</p>
+                    <div class="support-template">
+                        <p>
+
+                            <strong>📧 Email Template:</strong><br>
+                            Subject: Account Access Issue - [Your Full Name] <br><br>
+                            Dear [Administrator's Name],<br><br>
+                            I am experiencing difficulties accessing my account on the Student Internship Evaluation
+                            System. <br><br>
+                            [Further Description of Issue]<br><br>
+                            Full Name: [Your Full Name]<br>
+                            Assessor ID: [Your Assessor ID]<br>
+                            Registered Email: [Your Registered Email]<br>
+
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="constants.js"></script>
+    <script src="api.js"></script>
+    <script src="enhanced-features.js"></script>
+    <script src="contact_script.js"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>

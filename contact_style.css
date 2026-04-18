@@ -1,0 +1,100 @@
+.contact-page-wrapper {
+    min-height: 100vh;
+    width: 100%;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.5)50%, rgba(0, 0, 0, 0.5)50%), url(website_background.jpeg);
+    background-position: center;
+    background-size: cover;
+    position: relative;
+}
+
+.contact-container {
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    border-radius: 32px;
+    padding: 40px 45px;
+    margin-top: 30px;
+    border: 1px solid rgba(0, 255, 255, 0.5);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.contact-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.contact-header h1 {
+    font-size: 48px;
+    color: cyan;
+    font-family: 'Arial', sans-serif;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    margin-bottom: 15px;
+}
+
+.contact-header p {
+    color: #e0f0ff;
+    font-size: 18px;
+    line-height: 1.6;
+}
+
+.admin-table-wrapper h2 {
+    color: cyan;
+    font-size: 28px;
+    text-align: center;
+    font-family: Arial;
+}
+
+.contact-page-wrapper .scrollable-table {
+    max-height: 180px;
+}
+
+.support-note {
+    background: rgba(0, 50, 70, 0.6);
+    border-radius: 24px;
+    padding: 25px;
+    text-align: center;
+    margin-top: 35px;
+    border: 1px solid cyan;
+}
+
+.support-note p {
+    color: #d4f1ff;
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 10px 0;
+}
+
+.support-note strong {
+    color: cyan;
+}
+
+.support-template p {
+    text-align: left;
+    margin-left: 27%;
+    margin-top: 30px;
+    width: 45%;
+    background: rgba(78, 26, 123, 0.2);
+    border-radius: 20px;
+    padding: 25px;
+    border: 1px solid aqua;
+}
+
+
+
+@media (max-width: 768px) {
+    .contact-content {
+        width: 95%;
+        padding: 20px 0;
+    }
+
+    .contact-container {
+        padding: 25px;
+    }
+
+    .contact-header h1 {
+        font-size: 32px;
+    }
+
+    .admin-name {
+        font-size: 22px;
+    }
+}
