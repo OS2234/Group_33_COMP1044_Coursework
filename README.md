@@ -59,7 +59,7 @@ define('DB_USER', 'root');      // MAMP default
 define('DB_PASS', 'root');          // MAMP default
 ```
 
-5.  Open your browser and navigate to this link : http://localhost/project-folder-name/dashboard.html
+5.  Open your browser and navigate to this link : http://localhost/COMP1044_CW_G33/dashboard.html
 
 6.  Login using preset login credentials as stated below :
 
