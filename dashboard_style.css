@@ -7,7 +7,6 @@
     margin-bottom: 30px;
 }
 
-/* Table Wrappers */
 .table-wrapper {
     margin-bottom: 10px;
 }
@@ -34,7 +33,6 @@
     align-items: center;
 }
 
-/* Export button specific */
 .export-btn {
     background: transparent;
     border: 1px solid #4caf50;
@@ -52,7 +50,6 @@
     transform: scale(1.02);
 }
 
-/* Assigned Students List */
 .assigned-list {
     display: flex;
     flex-direction: column;
@@ -71,7 +68,6 @@
     text-align: left;
 }
 
-/* Add New Rows */
 .add-form-row td {
     background: rgba(0, 255, 255, 0.15);
     padding: 8px 12px;
@@ -113,7 +109,6 @@
     background: #b23c1c;
 }
 
-/* Add Button */
 .add-btn {
     background: transparent;
     border: 2px solid cyan;
@@ -132,10 +127,9 @@
 }
 
 /* ============================================ */
-/* TABLE ACTION BUTTONS - USING CLASS SELECTORS */
+/* TABLE ACTION BUTTONS  */
 /* ============================================ */
 
-/* Hide all edit/delete buttons by default - using CLASS selectors (dot) not ID selectors (#) */
 .edit-account-btn,
 .delete-account-btn,
 .edit-student-btn,
@@ -154,13 +148,11 @@
     white-space: nowrap;
     margin: 0 2px;
 
-    /* Hidden by default */
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
 }
 
-/* Show buttons ONLY when parent row has selected-row class */
 .scrollable-table tbody tr.selected-row .edit-account-btn,
 .scrollable-table tbody tr.selected-row .delete-account-btn,
 .scrollable-table tbody tr.selected-row .edit-student-btn,
@@ -172,14 +164,12 @@
     pointer-events: auto;
 }
 
-/* Hover effects for Edit buttons */
 .edit-account-btn:hover,
 .edit-student-btn:hover,
 .edit-assessor-btn:hover {
     background: darkblue;
 }
 
-/* Hover effects for Delete buttons */
 .delete-account-btn:hover,
 .delete-student-btn:hover,
 .delete-assessor-btn:hover {
@@ -187,7 +177,7 @@
 }
 
 /* ============================================ */
-/* EVALUATE AND VIEW BUTTONS (Assessor Dashboard) */
+/* EVALUATE AND VIEW BUTTONS */
 /* ============================================ */
 .evaluate-btn,
 .view-btn {
@@ -212,8 +202,53 @@
     background: #a5aa17;
 }
 
+#pendingEvaluationsTable tbody tr,
+#completedEvaluationsTable tbody tr {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#pendingEvaluationsTable tbody tr.selected-row td,
+#completedEvaluationsTable tbody tr.selected-row td {
+    background: rgba(0, 255, 255, 0.6);
+    box-shadow: inset 0 0 0 2px cyan;
+    color: #003366;
+    font-weight: bold;
+}
+
+#pendingEvaluationsTable .evaluate-btn,
+#completedEvaluationsTable .view-btn {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+#pendingEvaluationsTable tbody tr.selected-row .evaluate-btn,
+#completedEvaluationsTable tbody tr.selected-row .view-btn {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+#pendingEvaluationsTable td.action-cell,
+#completedEvaluationsTable td.action-cell {
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 8px;
+    text-align: center;
+}
+
+#pendingEvaluationsTable tbody tr.selected-row td.action-cell,
+#completedEvaluationsTable tbody tr.selected-row td.action-cell {
+    background: none;
+    box-shadow: none;
+    border: none;
+}
+
 /* ============================================ */
-/* SAVE AND CANCEL BUTTONS - ALWAYS VISIBLE */
+/* SAVE AND CANCEL BUTTONS */
 /* ============================================ */
 .save-account-btn,
 .cancel-account-btn,
@@ -305,7 +340,6 @@
     display: none;
 }
 
-/* Dropdown styles */
 .edit-dropdown,
 .add-dropdown {
     background: rgba(255, 255, 255, 0.95);
@@ -323,14 +357,12 @@
     box-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
 }
 
-/* Status and assessor cell text */
 .status-cell,
 .assessor-cell {
     color: #e0f0ff;
     font-weight: bold;
 }
 
-/* Score colors */
 .score-high {
     color: var(--success);
     font-weight: bold;
@@ -346,7 +378,6 @@
     font-weight: bold;
 }
 
-/* Ensure action-cell has proper styling for buttons */
 .scrollable-table td.action-cell {
     text-align: center;
     background: none;
